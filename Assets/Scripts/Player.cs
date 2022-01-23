@@ -21,9 +21,13 @@ public class Player : MonoBehaviour
     private Rigidbody rb;
     // TODO - player's speed should affect the animation speed
     public float speed;
-    private const float leftRightSpeed = 2.0f;
-    public bool onGround = true;
-    public bool isFalling = false;
+    private const float leftRightVelocity = 2.0f;
+    private const float uplift = 0.1f;
+    
+    private bool onGround = true;
+    private bool isFalling = false;
+    private bool movingLeft = false;
+    private bool movingRight = false;
     private Transform frontSideTransform;
     private Transform backSideTransform;
     public GameObject CurrentTile { get; private set; }
@@ -111,8 +115,7 @@ public class Player : MonoBehaviour
         }
         else
         {
-            Debug.Log("Ground contact");
-            //rb.AddForce(0.0f, 100.0f, 0.0f);
+            //Debug.Log("Ground contact");
         }
         
     }
@@ -121,10 +124,6 @@ public class Player : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        //rb.velocity = Vector3.forward * speed;
-        //rb.AddForce(Vector3.forward * 150f);
-        //rb.AddRelativeForce(Vector3.forward * 150f);
-
         frontSideTransform = gameObject.transform.Find("FrontSide").transform;
         backSideTransform = gameObject.transform.Find("BackSide").transform;
         CurrentTile = GameObject.Find("TileStart");
@@ -136,7 +135,6 @@ public class Player : MonoBehaviour
     void Update()
     {
         // WASD movement
-        // TODO - jump and slide
         if (Input.GetKeyDown(KeyCode.A))
         {
             if (!changedDirectionOnCurrentTile)
@@ -171,73 +169,58 @@ public class Player : MonoBehaviour
                 }
             }
         }
+        // TODO - jump and roll/slide animations
+        // when jumping, the player shouldn't exit/re-enter the trigger of the current tile => larger colliders
         if (Input.GetKeyDown(KeyCode.W))
         {
             onGround = false;
         }
-        // TODO - when jumping, the player shouldn't exit/re-enter the trigger of the current tile
-
+        
         // arrows movement (must prevent player from hitting a wall)
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             Vector3 tileCenteredPoint = GetNearestPointCenteredBetweenCurrentTileEdges();
-            Vector3 newPosition = transform.position - transform.right * leftRightSpeed * Time.deltaTime;
+            Vector3 newPosition = transform.position - transform.right * leftRightVelocity * Time.fixedDeltaTime;
             float distance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
             if (distance < tileWidth / 3.0f)
             {
-                //transform.Translate(Vector3.left * leftRightSpeed * Time.deltaTime);
-                transform.position = newPosition;
+                movingLeft = true;
+                movingRight = false;
+            }
+            else
+            {
+                movingLeft = movingRight = false;
             }
         }
         else if (Input.GetKey(KeyCode.RightArrow))
         {
             Vector3 tileCenteredPoint = GetNearestPointCenteredBetweenCurrentTileEdges();
-            Vector3 newPosition = transform.position + transform.right * leftRightSpeed * Time.deltaTime;
+            Vector3 newPosition = transform.position + transform.right * leftRightVelocity * Time.fixedDeltaTime;
             float distance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
             if (distance < tileWidth / 3.0f)
-            {
-                //transform.Translate(Vector3.right * leftRightSpeed * Time.deltaTime);
-                transform.position = newPosition;
+            {                
+                movingLeft = false;
+                movingRight = true;
             }
+            else
+            {
+                movingLeft = movingRight = false;
+            }
+        }
+        else
+        {
+            movingLeft = movingRight = false;
         }
         //float amountToMove = speed * Time.deltaTime;
         //transform.Translate(Vector3.forward * amountToMove);
-
     }
 
     private void FixedUpdate()
     {
 
-        transform.Translate(Vector3.up * 0.0001f);
-
-        //rb.AddForce(Vector3.up * 100.0f * Time.fixedDeltaTime);
-
-        //rb.AddForce(Vector3.up * 4910.0f * Time.fixedDeltaTime);
-
-        rb.velocity = transform.forward * 75 * Time.fixedDeltaTime;
-
-
-        /*
-        // Get the velocity
-        Vector3 direction = rb.velocity;
-        direction.y = 0.0f;
-        // Calculate the approximate distance that will be traversed
-        float distance = direction.magnitude * Time.fixedDeltaTime;
-
-        direction.Normalize();
-        RaycastHit hit;
-        if (rb.SweepTest(direction, out hit, distance))
-        {
-            //aboutToCollide = true;
-            //distanceToCollision = hit.distance;
-            //rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-            //rb.useGravity = false;
-            Debug.Log("about to collide");
-            //rb.AddForce(0.0f, 10.0f, 0.0f);
-            //rb.velocity = rb.velocity + 100000 * transform.up * Time.fixedDeltaTime;
-        }
-        rb.AddForce(Vector3.forward * 150f);
-        */
+        // small translation so that the player doesn't get stuck when entering a new tile (even though the ground is flat)
+        transform.Translate(Vector3.up * uplift * Time.fixedDeltaTime);
+        rb.velocity = transform.forward * speed * Time.fixedDeltaTime;
 
         if (!onGround)
         {
@@ -251,7 +234,7 @@ public class Player : MonoBehaviour
                 }
                 else
                 {
-                    rb.velocity += Vector3.down * 2.0f;
+                    rb.velocity += Vector3.down * 5.0f;
                 }
             }
             else
@@ -263,10 +246,20 @@ public class Player : MonoBehaviour
                 else
                 {
                     rb.velocity += Vector3.up * 5.0f;
-                }
+                    //rb.AddForce(Vector3.up * 100.0f, ForceMode.Impulse);
+                }                
             }
-            //rb.AddForce(Vector3.up * 300.0f, ForceMode.Impulse);
-            //rb.velocity += Vector3.up * 100.0f;
+        }
+        else
+        {
+            if (movingLeft)
+            {
+                rb.velocity += -transform.right * leftRightVelocity;
+            }
+            else if (movingRight)
+            {
+                rb.velocity += transform.right * leftRightVelocity;
+            }
         }
     }
 }

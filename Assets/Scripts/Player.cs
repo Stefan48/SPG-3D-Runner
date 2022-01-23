@@ -28,10 +28,14 @@ public class Player : MonoBehaviour
     private bool isFalling = false;
     private bool movingLeft = false;
     private bool movingRight = false;
+    private bool isRolling = false;
+    private float rollTime = 0.0f;
+    private float rollMaxTime = 1.0f;
+
     private Transform frontSideTransform;
     private Transform backSideTransform;
     public GameObject CurrentTile { get; private set; }
-    // used for the ray length when checking if there's a wall on either side of the player 
+    // used for the ray length when checking if there's a wall on either side of the player
     private float tileWidth;
     // player shouldn't be able to change direction more than once on the same tile
     private bool changedDirectionOnCurrentTile = false;
@@ -39,6 +43,9 @@ public class Player : MonoBehaviour
     Vector3 chosenDirection = Vector3.forward;
     // object used by the camera (follows the player except for jumps/slides and left/right movements)
     private GameObject cameraParams;
+
+    private Transform animationObject;
+    private Animator anim;
     
 
     private bool SideWallFound(Vector3 direction, float distance)
@@ -129,11 +136,22 @@ public class Player : MonoBehaviour
         CurrentTile = GameObject.Find("TileStart");
         tileWidth = Resources.Load<GameObject>("Prefabs/TileRegular").transform.Find("Ground").localScale.x;
         cameraParams = GameObject.Find("CameraParams");
+        animationObject = transform.Find("AnimationObject");
+        anim = animationObject.GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (isRolling)
+        {
+            rollTime += Time.deltaTime;
+            if (rollTime >= rollMaxTime)
+            {
+                isRolling = false;
+            }
+        }
+
         // WASD movement
         if (Input.GetKeyDown(KeyCode.A))
         {
@@ -149,6 +167,7 @@ public class Player : MonoBehaviour
                 else
                 {
                     // TODO - player stumbles
+                    anim.SetTrigger("Stumble Trigger");
                 }
             }            
         }
@@ -166,14 +185,29 @@ public class Player : MonoBehaviour
                 else
                 {
                     // TODO - player stumbles
+                    anim.SetTrigger("Stumble Trigger");
                 }
             }
         }
         // TODO - jump and roll/slide animations
         // when jumping, the player shouldn't exit/re-enter the trigger of the current tile => larger colliders
-        if (Input.GetKeyDown(KeyCode.W))
+        if (onGround && Input.GetKeyDown(KeyCode.W))
         {
             onGround = false;
+            anim.SetTrigger("Jump Trigger");
+        }
+        else if (onGround && !isRolling && Input.GetKeyDown(KeyCode.S))
+        {
+            isRolling = true;
+            rollTime = 0.0f;
+            if (Random.Range(0, 100) < 50)
+            {
+                anim.SetTrigger("Roll Trigger");
+            }
+            else
+            {
+                anim.SetTrigger("Crawl Trigger");
+            }
         }
         
         // arrows movement (must prevent player from hitting a wall)
@@ -220,7 +254,7 @@ public class Player : MonoBehaviour
 
         // small translation so that the player doesn't get stuck when entering a new tile (even though the ground is flat)
         transform.Translate(Vector3.up * uplift * Time.fixedDeltaTime);
-        rb.velocity = transform.forward * speed * Time.fixedDeltaTime;
+        rb.velocity = transform.forward * speed;
 
         if (!onGround)
         {
@@ -250,16 +284,13 @@ public class Player : MonoBehaviour
                 }                
             }
         }
-        else
+        if (movingLeft)
         {
-            if (movingLeft)
-            {
-                rb.velocity += -transform.right * leftRightVelocity;
-            }
-            else if (movingRight)
-            {
-                rb.velocity += transform.right * leftRightVelocity;
-            }
+            rb.velocity += -transform.right * leftRightVelocity;
+        }
+        else if (movingRight)
+        {
+            rb.velocity += transform.right * leftRightVelocity;
         }
     }
 }

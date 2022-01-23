@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     }
 
     private Rigidbody rb;
+    private BoxCollider bc;
     // TODO - player's speed should affect the animation speed
     public float speed;
     private const float leftRightVelocity = 2.0f;
@@ -30,7 +31,7 @@ public class Player : MonoBehaviour
     private bool movingRight = false;
     private bool isRolling = false;
     private float rollTime = 0.0f;
-    private float rollMaxTime = 1.0f;
+    private const float rollMaxTime = 1.0f;
 
     private Transform frontSideTransform;
     private Transform backSideTransform;
@@ -44,7 +45,7 @@ public class Player : MonoBehaviour
     // object used by the camera (follows the player except for jumps/slides and left/right movements)
     private GameObject cameraParams;
 
-    private Transform animationObject;
+    private Transform animationObj;
     private Animator anim;
     
 
@@ -131,13 +132,14 @@ public class Player : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        bc = GetComponent<BoxCollider>();
         frontSideTransform = gameObject.transform.Find("FrontSide").transform;
         backSideTransform = gameObject.transform.Find("BackSide").transform;
         CurrentTile = GameObject.Find("TileStart");
         tileWidth = Resources.Load<GameObject>("Prefabs/TileRegular").transform.Find("Ground").localScale.x;
         cameraParams = GameObject.Find("CameraParams");
-        animationObject = transform.Find("AnimationObject");
-        anim = animationObject.GetComponentInChildren<Animator>();
+        animationObj = transform.Find("Animation");
+        anim = animationObj.GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -149,6 +151,8 @@ public class Player : MonoBehaviour
             if (rollTime >= rollMaxTime)
             {
                 isRolling = false;
+                bc.size = new Vector3(bc.size.x, bc.size.y * 2.0f, bc.size.z);
+                bc.center = new Vector3(bc.center.x, bc.center.y * 2.0f, bc.center.z);
             }
         }
 
@@ -200,6 +204,8 @@ public class Player : MonoBehaviour
         {
             isRolling = true;
             rollTime = 0.0f;
+            bc.size = new Vector3(bc.size.x, bc.size.y / 2.0f, bc.size.z);
+            bc.center = new Vector3(bc.center.x, bc.center.y / 2.0f, bc.center.z);
             if (Random.Range(0, 100) < 50)
             {
                 anim.SetTrigger("Roll Trigger");

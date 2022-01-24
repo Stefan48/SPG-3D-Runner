@@ -136,7 +136,7 @@ public class Player : MonoBehaviour
         frontSideTransform = gameObject.transform.Find("FrontSide").transform;
         backSideTransform = gameObject.transform.Find("BackSide").transform;
         CurrentTile = GameObject.Find("TileStart");
-        tileWidth = Resources.Load<GameObject>("Prefabs/TileRegular").transform.Find("Ground").localScale.x;
+        tileWidth = CurrentTile.transform.Find("Ground").localScale.x;
         cameraParams = GameObject.Find("CameraParams");
         animationObj = transform.Find("Animation");
         anim = animationObj.GetComponentInChildren<Animator>();

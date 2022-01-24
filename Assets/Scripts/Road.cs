@@ -19,6 +19,8 @@ public class Road : MonoBehaviour {
         }
     }
 
+    public string theme;
+
     public GameObject RegularTilePrefab { get; private set; }
     public GameObject CornerRightTilePrefab { get; private set; }
     public GameObject CornerLeftTilePrefab { get; private set; }
@@ -256,13 +258,14 @@ public class Road : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
     {
-        RegularTilePrefab = Resources.Load<GameObject>("Prefabs/TileRegular");
-        CornerRightTilePrefab = Resources.Load<GameObject>("Prefabs/TileCornerRight");
-        CornerLeftTilePrefab = Resources.Load<GameObject>("Prefabs/TileCornerLeft");
-        SplitSidesTilePrefab = Resources.Load<GameObject>("Prefabs/TileSplitSides");
-        SplitRightTilePrefab = Resources.Load<GameObject>("Prefabs/TileSplitRight");
-        SplitLeftTilePrefab = Resources.Load<GameObject>("Prefabs/TileSplitLeft");
-        SplitTriTilePrefab = Resources.Load<GameObject>("Prefabs/TileSplitTri");
+        string prefabsPath = "Prefabs/" + theme + "/";
+        RegularTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileRegular");
+        CornerRightTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileCornerRight");
+        CornerLeftTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileCornerLeft");
+        SplitSidesTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitSides");
+        SplitRightTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitRight");
+        SplitLeftTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitLeft");
+        SplitTriTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitTri");
 
         // instantiate tiles
         for (int i = 0; i < tileStorageMaxCount; ++i)

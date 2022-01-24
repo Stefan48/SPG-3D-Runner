@@ -58,20 +58,24 @@ public class Player : MonoBehaviour
         Vector3 rayStartBack = backSideTransform.position;
         Ray rayBack = new Ray(rayStartBack, direction);
         Debug.DrawRay(rayBack.origin, rayBack.direction * 0.5f, Color.red, 7);
-        if (Physics.Raycast(rayFront, out hit, distance))
+        // raycast using default layer mask (~0 == hit anything); ignore triggers
+        if (Physics.Raycast(rayFront, out hit, distance, ~0, QueryTriggerInteraction.Ignore))
         {
+            Debug.Log("front ray hit " + hit.collider.name);
             if (hit.collider.gameObject.tag == "Wall")
             {
                 return true;
             }
         }
-        else if (Physics.Raycast(rayBack, out hit, distance))
+        else if (Physics.Raycast(rayBack, out hit, distance, ~0, QueryTriggerInteraction.Ignore))
         {
+            Debug.Log("back ray hit " + hit.collider.name);
             if (hit.collider.gameObject.tag == "Wall")
             {
                 return true;
             }
         }
+        else Debug.Log("no ray hit");
         return false;
     }
 

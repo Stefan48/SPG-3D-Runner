@@ -20,21 +20,26 @@ public class Player : MonoBehaviour
 
     private Rigidbody rb;
     private BoxCollider bc;
+    private Vector3 bcInitialSize = new Vector3(0.4f, 1.8f, 0.4f);
+    private Vector3 bcInitialCenter = new Vector3(0.0f, 0.9f, 0.0f);
     // TODO - player's speed should affect the animation speed
     public float speed;
     private const float leftRightVelocity = 2.0f;
     private const float uplift = 0.1f;
-    
+
+    private bool isRunning = true;
     private bool onGround = true;
     private bool isFalling = false;
     private bool movingLeft = false;
     private bool movingRight = false;
     private bool isRolling = false;
+    private const float maxJumpHeight = 2.0f;
     private float rollTime = 0.0f;
     private const float rollMaxTime = 1.0f;
 
     private Transform frontSideTransform;
     private Transform backSideTransform;
+    private const float rayStartHeight = 0.6f;
     public GameObject CurrentTile { get; private set; }
     // used for the ray length when checking if there's a wall on either side of the player
     private float tileWidth;
@@ -52,16 +57,15 @@ public class Player : MonoBehaviour
     private bool SideWallFound(Vector3 direction, float distance)
     {
         RaycastHit hit;
-        Vector3 rayStartFront = frontSideTransform.position;
+        Vector3 rayStartFront = new Vector3(frontSideTransform.position.x, rayStartHeight, frontSideTransform.position.z);
         Ray rayFront = new Ray(rayStartFront, direction);
         Debug.DrawRay(rayFront.origin, rayFront.direction * 0.5f, Color.red, 7);
-        Vector3 rayStartBack = backSideTransform.position;
+        Vector3 rayStartBack = new Vector3(backSideTransform.position.x, rayStartHeight, backSideTransform.position.z);
         Ray rayBack = new Ray(rayStartBack, direction);
         Debug.DrawRay(rayBack.origin, rayBack.direction * 0.5f, Color.red, 7);
-        // raycast using default layer mask (~0 == hit anything); ignore triggers
+        // raycast using default layer mask (~0 == hit anything), ignoring triggers
         if (Physics.Raycast(rayFront, out hit, distance, ~0, QueryTriggerInteraction.Ignore))
         {
-            Debug.Log("front ray hit " + hit.collider.name);
             if (hit.collider.gameObject.tag == "Wall")
             {
                 return true;
@@ -69,13 +73,11 @@ public class Player : MonoBehaviour
         }
         else if (Physics.Raycast(rayBack, out hit, distance, ~0, QueryTriggerInteraction.Ignore))
         {
-            Debug.Log("back ray hit " + hit.collider.name);
             if (hit.collider.gameObject.tag == "Wall")
             {
                 return true;
             }
         }
-        else Debug.Log("no ray hit");
         return false;
     }
 
@@ -90,6 +92,17 @@ public class Player : MonoBehaviour
         if (other.tag.Contains("Ground"))
         {
             CurrentTile = other.transform.parent.gameObject;
+        }
+        else if (other.tag == "FallInto")
+        {
+            // disable current tile's ground's non-trigger collider (which must be the first collider of the ground object)
+            isRunning = false;
+            rb.velocity = new Vector3(0, 0, 0);
+            bc.size = bcInitialSize;
+            bc.center = bcInitialCenter;
+            CurrentTile.transform.Find("Ground").GetComponent<Collider>().enabled = false;
+            anim.SetTrigger("Fall Trigger");
+            // TODO - game end
         }
     }
 
@@ -121,9 +134,22 @@ public class Player : MonoBehaviour
     {
         if (collision.gameObject.tag == "Wall")
         {
-            speed = 0;
-            Debug.Log("Wall collision");
-            // TODO - crash animation
+            isRunning = false;
+            rb.velocity = new Vector3(0, 0, 0);
+            bc.size = bcInitialSize;
+            bc.center = bcInitialCenter;
+            anim.SetTrigger("Fall Back Trigger");
+            // TODO - game end
+        }
+        else if (collision.gameObject.tag == "Obstacle")
+        {
+            // if (transform.position.y <= 0.55f) => player stepped on obstacle
+            isRunning = false;
+            rb.velocity = new Vector3(0, 0, 0);
+            bc.size = bcInitialSize;
+            bc.center = bcInitialCenter;
+            anim.SetTrigger("Fall Back Trigger");
+            // TODO - game end
         }
         else
         {
@@ -174,7 +200,7 @@ public class Player : MonoBehaviour
                 }
                 else
                 {
-                    // TODO - player stumbles
+                    // TODO - player stumbles (at 2 close stumbles he loses)
                     anim.SetTrigger("Stumble Trigger");
                 }
             }            
@@ -197,11 +223,13 @@ public class Player : MonoBehaviour
                 }
             }
         }
-        // TODO - jump and roll/slide animations
         // when jumping, the player shouldn't exit/re-enter the trigger of the current tile => larger colliders
         if (onGround && Input.GetKeyDown(KeyCode.W))
         {
             onGround = false;
+            bc.size = new Vector3(bc.size.x, bc.size.y / 2.0f, bc.size.z);
+            bc.center = new Vector3(bc.center.x, bc.center.y * 1.5f, bc.center.z);
+            //bc.center = new Vector3(bc.center.x, bc.center.y * 2.0f, bc.center.z);
             anim.SetTrigger("Jump Trigger");
         }
         else if (onGround && !isRolling && Input.GetKeyDown(KeyCode.S))
@@ -225,30 +253,32 @@ public class Player : MonoBehaviour
         {
             Vector3 tileCenteredPoint = GetNearestPointCenteredBetweenCurrentTileEdges();
             Vector3 newPosition = transform.position - transform.right * leftRightVelocity * Time.fixedDeltaTime;
-            float distance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
-            if (distance < tileWidth / 3.0f)
+            float oldDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
+            float newDistance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
+            if (newDistance > oldDistance && newDistance >= tileWidth / 3.0f)
             {
-                movingLeft = true;
-                movingRight = false;
+                movingLeft = movingRight = false;
             }
             else
             {
-                movingLeft = movingRight = false;
+                movingLeft = true;
+                movingRight = false;
             }
         }
         else if (Input.GetKey(KeyCode.RightArrow))
         {
             Vector3 tileCenteredPoint = GetNearestPointCenteredBetweenCurrentTileEdges();
             Vector3 newPosition = transform.position + transform.right * leftRightVelocity * Time.fixedDeltaTime;
-            float distance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
-            if (distance < tileWidth / 3.0f)
-            {                
-                movingLeft = false;
-                movingRight = true;
+            float oldDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
+            float newDistance = Vector3.Distance(new Vector3(newPosition.x, 0, newPosition.z), new Vector3(tileCenteredPoint.x, 0, tileCenteredPoint.z));
+            if (newDistance > oldDistance && newDistance >= tileWidth / 3.0f)
+            {
+                movingLeft = movingRight = false;
             }
             else
             {
-                movingLeft = movingRight = false;
+                movingLeft = false;
+                movingRight = true;
             }
         }
         else
@@ -261,46 +291,55 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-
-        // small translation so that the player doesn't get stuck when entering a new tile (even though the ground is flat)
-        transform.Translate(Vector3.up * uplift * Time.fixedDeltaTime);
-        rb.velocity = transform.forward * speed;
-
-        if (!onGround)
+        if (isRunning)
         {
-            if (isFalling)
+            // small translation so that the player doesn't get stuck when entering a new tile (even though the ground is flat)
+            transform.Translate(Vector3.up * uplift * Time.fixedDeltaTime);
+            rb.velocity = transform.forward * speed;
+
+            if (!onGround)
             {
-                if (transform.position.y <= 0.51f)
+                if (isFalling)
                 {
-                    onGround = true;
-                    isFalling = false;
-                    transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
+                    if (transform.position.y <= 0.51f)
+                    {
+                        onGround = true;
+                        isFalling = false;
+                        transform.position = new Vector3(transform.position.x, 0.5f, transform.position.z);
+                        bc.size = new Vector3(bc.size.x, bc.size.y * 2.0f, bc.size.z);
+                        bc.center = new Vector3(bc.center.x, bc.center.y * 2.0f / 3.0f, bc.center.z);
+                        //bc.center = new Vector3(bc.center.x, bc.center.y / 2.0f, bc.center.z);
+                    }
+                    else
+                    {
+                        rb.velocity += Vector3.down * 5.0f;
+                    }
                 }
                 else
                 {
-                    rb.velocity += Vector3.down * 5.0f;
+                    if (transform.position.y >= maxJumpHeight)
+                    {
+                        isFalling = true;
+                    }
+                    else
+                    {
+                        rb.velocity += Vector3.up * 5.0f;
+                        //rb.AddForce(Vector3.up * 100.0f, ForceMode.Impulse);
+                    }
                 }
             }
-            else
+            if (movingLeft)
             {
-                if (transform.position.y >= 1.5f)
-                {
-                    isFalling = true;
-                }
-                else
-                {
-                    rb.velocity += Vector3.up * 5.0f;
-                    //rb.AddForce(Vector3.up * 100.0f, ForceMode.Impulse);
-                }                
+                rb.velocity += -transform.right * leftRightVelocity;
+            }
+            else if (movingRight)
+            {
+                rb.velocity += transform.right * leftRightVelocity;
             }
         }
-        if (movingLeft)
+        else
         {
-            rb.velocity += -transform.right * leftRightVelocity;
-        }
-        else if (movingRight)
-        {
-            rb.velocity += transform.right * leftRightVelocity;
+            
         }
     }
 }

@@ -16,6 +16,8 @@ TagManager:
   - TileSplitLeft
   - TileSplitRight
   - TileSplitTri
+  - Obstacle
+  - FallInto
   layers:
   - Default
   - TransparentFX

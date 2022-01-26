@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class SplitTile : MonoBehaviour {
+public abstract class SplitTile : Tile {
 
     // make sure split tiles' branches get merged before the actual split tiles get recycled due to being the oldest of the road
     // TODO - delay time as a function of player's speed

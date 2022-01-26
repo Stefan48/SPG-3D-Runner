@@ -3,6 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public enum ObstacleType
+{
+    None,
+    JumpOver,
+    FallInto,
+    RollUnder
+}
+
 public class Road : MonoBehaviour {
 
     // Singleton Pattern
@@ -30,6 +38,14 @@ public class Road : MonoBehaviour {
     public GameObject SplitTriTilePrefab { get; private set; }
 
 
+    private const int numObstaclesJumpOverTypes = 4;
+    private List<GameObject> ObstaclesJumpOverPrefabs = new List<GameObject>();
+    private const int numObstaclesFallIntoTypes = 1;
+    private List<GameObject> ObstaclesFallIntoPrefabs = new List<GameObject>();
+    private const int numObstaclesRollUnderTypes = 1;
+    private List<GameObject> ObstaclesRollUnderPrefabs = new List<GameObject>();
+
+
     // TODO - find the right storage max count value to minimize memory overhead
     // TODO - there's shouldn't be the same amount of each tile type in storage
     private const int tileStorageMaxCount = 30;
@@ -40,6 +56,14 @@ public class Road : MonoBehaviour {
     private List<GameObject> splitRightTilesStorage = new List<GameObject>();
     private List<GameObject> splitLeftTilesStorage = new List<GameObject>();
     private List<GameObject> splitTriTilesStorage = new List<GameObject>();
+
+    private const int obstacleStorageCountPerType = 5;
+    private const int obstacleJumpOverStorageMaxCount = numObstaclesJumpOverTypes * obstacleStorageCountPerType;
+    private List<GameObject> obstaclesJumpOverStorage = new List<GameObject>();
+    private const int obstacleFallIntoStorageMaxCount = numObstaclesFallIntoTypes * obstacleStorageCountPerType;
+    private List<GameObject> obstaclesFallIntoStorage = new List<GameObject>();
+    private const int obstacleRollUnderStorageMaxCount = numObstaclesRollUnderTypes * obstacleStorageCountPerType;
+    private List<GameObject> obstaclesRollUnderStorage = new List<GameObject>();
 
     private const int maxTilesAhead = 4;
     private const int maxTilesBehind = 2;
@@ -100,8 +124,79 @@ public class Road : MonoBehaviour {
         return tile;
     }
 
+    public void RandomizeObstacle(GameObject tile)
+    {
+        int obstacleType = Random.Range(0, 100);
+        if (obstacleType < 10)
+        {
+            // obstacle of 'jump over' type
+            int index = Random.Range(0, obstaclesJumpOverStorage.Count);
+            GameObject obstacle = obstaclesJumpOverStorage[index];
+            obstaclesJumpOverStorage.RemoveAt(index);
+            // vary the position and rotation
+            float positionXOffset = (Random.Range(0, 100) - 50.0f) / 70.0f;
+            float positionZOffset = (Random.Range(0, 100) - 50.0f) / 70.0f;
+            obstacle.transform.position = new Vector3(tile.transform.position.x + positionXOffset, obstacle.transform.position.y, tile.transform.position.z + positionZOffset);
+            float rotationOffset = (Random.Range(0, 100) - 50.0f) * 1.2f;
+            obstacle.transform.rotation = tile.transform.rotation;
+            obstacle.transform.eulerAngles += new Vector3(0.0f, rotationOffset, 0.0f);
+            obstacle.SetActive(true);
+            Tile tileComponent = tile.GetComponent<Tile>();
+            tileComponent.obstacle = obstacle;
+            tileComponent.obstacleType = ObstacleType.JumpOver;
+        }
+        else if (obstacleType < 20)
+        {
+            // obstacle of 'fall into' type
+            int index = Random.Range(0, obstaclesFallIntoStorage.Count);
+            GameObject obstacle = obstaclesFallIntoStorage[index];
+            obstaclesFallIntoStorage.RemoveAt(index);
+            // vary the position
+            float positionXOffset = (Random.Range(0, 100) - 50.0f) / 70.0f;
+            float positionZOffset = (Random.Range(0, 100) - 50.0f) / 70.0f;
+            obstacle.transform.position = new Vector3(tile.transform.position.x + positionXOffset, obstacle.transform.position.y, tile.transform.position.z + positionZOffset);            
+            obstacle.transform.rotation = tile.transform.rotation;
+            obstacle.SetActive(true);
+            Tile tileComponent = tile.GetComponent<Tile>();
+            tileComponent.obstacle = obstacle;
+            tileComponent.obstacleType = ObstacleType.FallInto;
+        }
+        else if (obstacleType < 30 && tile.tag == "TileRegular")
+        {
+            // obstacle of 'roll under' type
+            int index = Random.Range(0, obstaclesRollUnderStorage.Count);
+            GameObject obstacle = obstaclesRollUnderStorage[index];
+            obstaclesRollUnderStorage.RemoveAt(index);
+            obstacle.transform.position = new Vector3(tile.transform.position.x, obstacle.transform.position.y, tile.transform.position.z);
+            obstacle.transform.rotation = tile.transform.rotation;
+            obstacle.SetActive(true);
+            Tile tileComponent = tile.GetComponent<Tile>();
+            tileComponent.obstacle = obstacle;
+            tileComponent.obstacleType = ObstacleType.RollUnder;
+        }
+    }
+
     public void RecycleTile(GameObject tile)
     {
+        Tile tileComponent = tile.GetComponent<Tile>();
+        if (tileComponent.obstacle != null)
+        {
+            tileComponent.obstacle.SetActive(false);
+            if (tileComponent.obstacleType == ObstacleType.JumpOver)
+            {
+                obstaclesJumpOverStorage.Add(tileComponent.obstacle);
+            }
+            else if (tileComponent.obstacleType == ObstacleType.FallInto)
+            {
+                obstaclesFallIntoStorage.Add(tileComponent.obstacle);
+            }
+            else if (tileComponent.obstacleType == ObstacleType.RollUnder)
+            {
+                obstaclesRollUnderStorage.Add(tileComponent.obstacle);
+            }
+            tileComponent.obstacle = null;
+            tileComponent.obstacleType = ObstacleType.None;
+        }
         tile.SetActive(false);
         if (tile.tag == "TileCornerRight")
         {
@@ -114,8 +209,9 @@ public class Road : MonoBehaviour {
         // recycle split tiles recursively
         else if (tile.tag == "TileSplitSides")
         {
-            List<GameObject> leftRoad = tile.GetComponent<SplitSidesTile>().leftRoad;
-            List<GameObject> rightRoad = tile.GetComponent<SplitSidesTile>().rightRoad;
+            SplitSidesTile splitSidesTileComponent = tile.GetComponent<SplitSidesTile>();
+            List<GameObject> leftRoad = splitSidesTileComponent.leftRoad;
+            List<GameObject> rightRoad = splitSidesTileComponent.rightRoad;
             foreach (GameObject t in leftRoad)
             {
                 RecycleTile(t);
@@ -130,8 +226,9 @@ public class Road : MonoBehaviour {
         }
         else if (tile.tag == "TileSplitRight")
         {
-            List<GameObject> frontRoad = tile.GetComponent<SplitRightTile>().frontRoad;
-            List<GameObject> rightRoad = tile.GetComponent<SplitRightTile>().rightRoad;
+            SplitRightTile splitRightTileComponent = tile.GetComponent<SplitRightTile>();
+            List<GameObject> frontRoad = splitRightTileComponent.frontRoad;
+            List<GameObject> rightRoad = splitRightTileComponent.rightRoad;
             foreach (GameObject t in frontRoad)
             {
                 RecycleTile(t);
@@ -146,8 +243,9 @@ public class Road : MonoBehaviour {
         }
         else if (tile.tag == "TileSplitLeft")
         {
-            List<GameObject> frontRoad = tile.GetComponent<SplitLeftTile>().frontRoad;
-            List<GameObject> leftRoad = tile.GetComponent<SplitLeftTile>().leftRoad;
+            SplitLeftTile splitLeftTileComponent = tile.GetComponent<SplitLeftTile>();
+            List<GameObject> frontRoad = splitLeftTileComponent.frontRoad;
+            List<GameObject> leftRoad = splitLeftTileComponent.leftRoad;
             foreach (GameObject t in frontRoad)
             {
                 RecycleTile(t);
@@ -162,9 +260,10 @@ public class Road : MonoBehaviour {
         }
         else if (tile.tag == "TileSplitTri")
         {
-            List<GameObject> frontRoad = tile.GetComponent<SplitTriTile>().frontRoad;
-            List<GameObject> leftRoad = tile.GetComponent<SplitTriTile>().leftRoad;
-            List<GameObject> rightRoad = tile.GetComponent<SplitTriTile>().rightRoad;
+            SplitTriTile splitTriTileComponent = tile.GetComponent<SplitTriTile>();
+            List<GameObject> frontRoad = splitTriTileComponent.frontRoad;
+            List<GameObject> leftRoad = splitTriTileComponent.leftRoad;
+            List<GameObject> rightRoad = splitTriTileComponent.rightRoad;
             foreach (GameObject t in frontRoad)
             {
                 RecycleTile(t);
@@ -246,6 +345,11 @@ public class Road : MonoBehaviour {
                 spawnedTile.name = "Tile" + (int.Parse(lastTile.name.Substring(4)) + 1).ToString();
             }
             spawnedTile.SetActive(true);
+            // there can't be consecutive tiles with obstacles
+            if (lastTile.GetComponent<Tile>().obstacle == null)
+            {
+                RandomizeObstacle(spawnedTile);
+            }
             road.Add(spawnedTile);
         }
     }
@@ -259,13 +363,29 @@ public class Road : MonoBehaviour {
 	void Start ()
     {
         string prefabsPath = "Prefabs/" + theme + "/";
-        RegularTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileRegular");
-        CornerRightTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileCornerRight");
-        CornerLeftTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileCornerLeft");
-        SplitSidesTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitSides");
-        SplitRightTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitRight");
-        SplitLeftTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitLeft");
-        SplitTriTilePrefab = Resources.Load<GameObject>(prefabsPath + "TileSplitTri");
+        // load tile prefabs
+        string tilesPath = prefabsPath + "Tiles/";
+        RegularTilePrefab = Resources.Load<GameObject>(tilesPath + "TileRegular");
+        CornerRightTilePrefab = Resources.Load<GameObject>(tilesPath + "TileCornerRight");
+        CornerLeftTilePrefab = Resources.Load<GameObject>(tilesPath + "TileCornerLeft");
+        SplitSidesTilePrefab = Resources.Load<GameObject>(tilesPath + "TileSplitSides");
+        SplitRightTilePrefab = Resources.Load<GameObject>(tilesPath + "TileSplitRight");
+        SplitLeftTilePrefab = Resources.Load<GameObject>(tilesPath + "TileSplitLeft");
+        SplitTriTilePrefab = Resources.Load<GameObject>(tilesPath + "TileSplitTri");
+        // load obstacle prefabs
+        string obstaclesPath = prefabsPath + "Obstacles/";
+        for (int i = 0; i < numObstaclesJumpOverTypes; ++i)
+        {
+            ObstaclesJumpOverPrefabs.Add(Resources.Load<GameObject>(obstaclesPath + "JumpOver" + (i + 1)));
+        }
+        for (int i = 0; i < numObstaclesFallIntoTypes; ++i)
+        {
+            ObstaclesFallIntoPrefabs.Add(Resources.Load<GameObject>(obstaclesPath + "FallInto" + (i + 1)));
+        }
+        for (int i = 0; i < numObstaclesRollUnderTypes; ++i)
+        {
+            ObstaclesRollUnderPrefabs.Add(Resources.Load<GameObject>(obstaclesPath + "RollUnder" + (i + 1)));
+        }
 
         // instantiate tiles
         for (int i = 0; i < tileStorageMaxCount; ++i)
@@ -298,6 +418,35 @@ public class Road : MonoBehaviour {
             newTile = Instantiate(SplitTriTilePrefab, new Vector3(), Quaternion.identity);
             newTile.SetActive(false);
             splitTriTilesStorage.Add(newTile);
+        }
+
+        // instantiate obstacles
+        for (int i = 0; i < numObstaclesJumpOverTypes; ++i)
+        {
+            for (int j = 0; j < obstacleStorageCountPerType; ++j)
+            {
+                GameObject obstacle = Instantiate(ObstaclesJumpOverPrefabs[i], ObstaclesJumpOverPrefabs[i].transform.position, Quaternion.identity);
+                obstacle.SetActive(false);
+                obstaclesJumpOverStorage.Add(obstacle);
+            }
+        }
+        for (int i = 0; i < numObstaclesFallIntoTypes; ++i)
+        {
+            for (int j = 0; j < obstacleStorageCountPerType; ++j)
+            {
+                GameObject obstacle = Instantiate(ObstaclesFallIntoPrefabs[i], ObstaclesFallIntoPrefabs[i].transform.position, Quaternion.identity);
+                obstacle.SetActive(false);
+                obstaclesFallIntoStorage.Add(obstacle);
+            }
+        }
+        for (int i = 0; i < numObstaclesRollUnderTypes; ++i)
+        {
+            for (int j = 0; j < obstacleStorageCountPerType; ++j)
+            {
+                GameObject obstacle = Instantiate(ObstaclesRollUnderPrefabs[i], ObstaclesRollUnderPrefabs[i].transform.position, Quaternion.identity);
+                obstacle.SetActive(false);
+                obstaclesRollUnderStorage.Add(obstacle);
+            }
         }
 
         // initialize road

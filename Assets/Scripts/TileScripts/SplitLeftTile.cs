@@ -18,6 +18,10 @@ public class SplitLeftTile : SplitTile {
             spawnedTileFront.transform.position = transform.Find("AttachPointFront").position;
             spawnedTileFront.name = "Tile" + (int.Parse(name.Substring(4)) + 1).ToString();
             spawnedTileFront.SetActive(true);
+            if (obstacle == null)
+            {
+                Road.Instance.RandomizeObstacle(spawnedTileFront);
+            }
             frontRoad.Add(spawnedTileFront);
 
             GameObject spawnedTileLeft = Road.Instance.GetRegularTile();
@@ -26,6 +30,10 @@ public class SplitLeftTile : SplitTile {
             spawnedTileLeft.transform.position = transform.Find("AttachPointLeft").position;
             spawnedTileLeft.name = "Tile" + (int.Parse(name.Substring(4)) + 1).ToString();
             spawnedTileLeft.SetActive(true);
+            if (obstacle == null)
+            {
+                Road.Instance.RandomizeObstacle(spawnedTileLeft);
+            }
             leftRoad.Add(spawnedTileLeft);
         }
         else
@@ -56,6 +64,10 @@ public class SplitLeftTile : SplitTile {
                     // set tile's name according to its index
                     spawnedTile.name = "Tile" + (int.Parse(lastTile[i].name.Substring(4)) + 1).ToString();
                     spawnedTile.SetActive(true);
+                    if (lastTile[i].GetComponent<Tile>().obstacle == null)
+                    {
+                        Road.Instance.RandomizeObstacle(spawnedTile);
+                    }
                     if (i == 0)
                     {
                         frontRoad.Add(spawnedTile);

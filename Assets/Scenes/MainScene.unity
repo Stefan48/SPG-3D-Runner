@@ -794,6 +794,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3820186711489202666, guid: 33814be07b3638c448bf426f5daea2c9,
         type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3820186711489202666, guid: 33814be07b3638c448bf426f5daea2c9,
+        type: 3}
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
@@ -806,6 +811,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3883641739158700164, guid: 33814be07b3638c448bf426f5daea2c9,
+        type: 3}
+      propertyPath: m_TagString
+      value: Land
       objectReference: {fileID: 0}
     - target: {fileID: 3886210275039615744, guid: 33814be07b3638c448bf426f5daea2c9,
         type: 3}

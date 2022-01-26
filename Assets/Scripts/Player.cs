@@ -52,6 +52,8 @@ public class Player : MonoBehaviour
 
     private Transform animationObj;
     private Animator anim;
+
+    private GameObject land;
     
 
     private bool SideWallFound(Vector3 direction, float distance)
@@ -170,6 +172,7 @@ public class Player : MonoBehaviour
         cameraParams = GameObject.Find("CameraParams");
         animationObj = transform.Find("Animation");
         anim = animationObj.GetComponentInChildren<Animator>();
+        land = GameObject.Find("Land");
     }
 
     // Update is called once per frame
@@ -289,7 +292,7 @@ public class Player : MonoBehaviour
         //transform.Translate(Vector3.forward * amountToMove);
     }
 
-    private void FixedUpdate()
+    void FixedUpdate()
     {
         if (isRunning)
         {

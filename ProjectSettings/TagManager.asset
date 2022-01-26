@@ -18,6 +18,7 @@ TagManager:
   - TileSplitTri
   - Obstacle
   - FallInto
+  - Land
   layers:
   - Default
   - TransparentFX

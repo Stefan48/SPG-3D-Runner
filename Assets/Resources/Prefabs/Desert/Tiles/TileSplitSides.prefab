@@ -420,6 +420,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Wall
       objectReference: {fileID: 0}
+    - target: {fileID: 1491465018824712, guid: d897a6eb76d01b44396e3aaa94d4b845, type: 3}
+      propertyPath: m_TagString
+      value: Wall
+      objectReference: {fileID: 0}
     - target: {fileID: 1692251883612830, guid: d897a6eb76d01b44396e3aaa94d4b845, type: 3}
       propertyPath: m_TagString
       value: Wall

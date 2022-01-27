@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
     private static Player instance;
+    private Score _Score;
     public static Player Instance
     {
         get
@@ -17,6 +19,9 @@ public class Player : MonoBehaviour
             return instance;
         }
     }
+
+    public GameObject restartButton;
+    public GameObject exitButton;
 
     private Rigidbody rb;
     private BoxCollider bc;
@@ -46,6 +51,7 @@ public class Player : MonoBehaviour
     private Transform backSideTransform;
     private const float rayStartHeight = 0.6f;
     public GameObject CurrentTile { get; private set; }
+    public GameObject Menu;
     // used for the ray length when checking if there's a wall on either side of the player
     private float tileWidth;
     // player shouldn't be able to change direction more than once on the same tile
@@ -115,6 +121,7 @@ public class Player : MonoBehaviour
         {
             other.gameObject.SetActive(false);
             numGemsCollected++;
+            _Score.UpdateCollected((int)numGemsCollected);
         }
     }
 
@@ -155,6 +162,8 @@ public class Player : MonoBehaviour
             bc.center = bcInitialCenter;
             anim.SetTrigger("Fall Back Trigger");
             // TODO - game end
+            restartButton.SetActive(true);
+            exitButton.SetActive(true);
         }
         else if (collision.gameObject.tag == "Obstacle")
         {
@@ -176,6 +185,7 @@ public class Player : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        
         speed = 3.0f;
         scoreIncreaseAmount = speed / 3.0f;
         rb = GetComponent<Rigidbody>();
@@ -188,12 +198,23 @@ public class Player : MonoBehaviour
         animationObj = transform.Find("Animation");
         anim = animationObj.GetComponentInChildren<Animator>();
         land = GameObject.Find("Land");
+        _Score = GameObject.Find("Canvas").GetComponent<Score>();
+        Menu = GameObject.Find("OptionsMenu");
+
+
     }
 
     // Update is called once per frame
     void Update()
     {
+       
         score += scoreIncreaseAmount * Time.deltaTime;
+        
+        if(isRunning)
+        {
+            _Score.UpdateScore((int)score);
+        }
+        
         if (score % 50 == 0)
         {
             speed += speed / 10.0f;

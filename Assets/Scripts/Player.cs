@@ -22,6 +22,7 @@ public class Player : MonoBehaviour
     private BoxCollider bc;
     private Vector3 bcInitialSize = new Vector3(0.4f, 1.8f, 0.4f);
     private Vector3 bcInitialCenter = new Vector3(0.0f, 0.9f, 0.0f);
+    public float numGemsCollected = 0;
     // TODO - player's speed should affect the animation speed
     public float speed;
     private const float leftRightVelocity = 2.0f;
@@ -106,6 +107,11 @@ public class Player : MonoBehaviour
             anim.SetTrigger("Fall Trigger");
             // TODO - game end
         }
+        else if (other.tag == "Gem")
+        {
+            other.gameObject.SetActive(false);
+            numGemsCollected++;
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -117,6 +123,9 @@ public class Player : MonoBehaviour
             GameObject tile = other.gameObject.transform.parent.gameObject;
             if (tile.tag.Contains("TileSplit"))
             {
+                SplitTile splitTileComponent = tile.GetComponent<SplitTile>();
+                Road.Instance.spawningGems = splitTileComponent.spawningGems;
+                Road.Instance.numTilesWithGemsRemaining = splitTileComponent.numTilesWithGemsRemaining;
                 // when the player leaves a split tile, merge the chosen branch into the main road and recycle the other branch(es)
                 if (changedDirectionOnCurrentTile)
                 {

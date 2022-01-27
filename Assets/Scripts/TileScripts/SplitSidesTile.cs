@@ -18,6 +18,7 @@ public class SplitSidesTile : SplitTile {
             spawnedTileLeft.transform.position = transform.Find("AttachPointLeft").position;
             spawnedTileLeft.name = "Tile" + (int.Parse(name.Substring(4)) + 1).ToString();
             spawnedTileLeft.SetActive(true);
+            // randomize obstacle
             if (obstacle == null)
             {
                 Road.Instance.RandomizeObstacle(spawnedTileLeft);
@@ -30,11 +31,31 @@ public class SplitSidesTile : SplitTile {
             spawnedTileRight.transform.position = transform.Find("AttachPointRight").position;
             spawnedTileRight.name = "Tile" + (int.Parse(name.Substring(4)) + 1).ToString();
             spawnedTileRight.SetActive(true);
+            // randomize obstacle
             if (obstacle == null)
             {
                 Road.Instance.RandomizeObstacle(spawnedTileRight);
             }
             rightRoad.Add(spawnedTileRight);
+            // spawn gems
+            if (spawningGems)
+            {
+                Road.Instance.SpawnGems(spawnedTileLeft);
+                Road.Instance.SpawnGems(spawnedTileRight);
+                numTilesWithGemsRemaining--;
+                if (numTilesWithGemsRemaining == 0)
+                {
+                    spawningGems = false;
+                }
+            }
+            else
+            {
+                if (Random.Range(0, 100) < Road.Instance.gemSpawnPercentage)
+                {
+                    spawningGems = true;
+                    numTilesWithGemsRemaining = Random.Range(Road.Instance.minConsecutiveTilesWithGems, Road.Instance.maxConsecutiveTilesWithGems);
+                }
+            }
         }
         else
         {
@@ -64,9 +85,22 @@ public class SplitSidesTile : SplitTile {
                     // set tile's name according to its index
                     spawnedTile.name = "Tile" + (int.Parse(lastTile[i].name.Substring(4)) + 1).ToString();
                     spawnedTile.SetActive(true);
+                    // randomize obstacle
                     if (lastTile[i].GetComponent<Tile>().obstacle == null)
                     {
                         Road.Instance.RandomizeObstacle(spawnedTile);
+                    }
+                    // spawn gems
+                    Tile tileComponent = spawnedTile.GetComponent<Tile>();
+                    if (spawningGems && (tileComponent.obstacle == null || tileComponent.obstacleType != ObstacleType.RollUnder))
+                    {
+                        Road.Instance.SpawnGems(spawnedTile);
+                    }
+                    if (spawnedTile.tag.Contains("TileSplit"))
+                    {
+                        SplitTile splitTileComponent = spawnedTile.GetComponent<SplitTile>();
+                        splitTileComponent.spawningGems = spawningGems;
+                        splitTileComponent.numTilesWithGemsRemaining = numTilesWithGemsRemaining;
                     }
                     if (i == 0)
                     {
@@ -76,6 +110,22 @@ public class SplitSidesTile : SplitTile {
                     {
                         rightRoad.Add(spawnedTile);
                     }
+                }
+            }
+            if (spawningGems)
+            {
+                numTilesWithGemsRemaining--;
+                if (numTilesWithGemsRemaining == 0)
+                {
+                    spawningGems = false;
+                }
+            }
+            else
+            {
+                if (Random.Range(0, 100) < Road.Instance.gemSpawnPercentage)
+                {
+                    spawningGems = true;
+                    numTilesWithGemsRemaining = Random.Range(Road.Instance.minConsecutiveTilesWithGems, Road.Instance.maxConsecutiveTilesWithGems);
                 }
             }
         }

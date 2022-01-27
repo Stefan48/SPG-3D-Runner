@@ -19,6 +19,8 @@ TagManager:
   - Obstacle
   - FallInto
   - Land
+  - Collectible
+  - Gem
   layers:
   - Default
   - TransparentFX

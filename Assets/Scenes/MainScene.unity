@@ -405,6 +405,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   theme: Desert
+  spawningGems: 0
+  numTilesWithGemsRemaining: 0
 --- !u!4 &1525810043
 Transform:
   m_ObjectHideFlags: 0
@@ -571,6 +573,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8e302c376c65b0479c14767406c1c4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  numGemsCollected: 0
   speed: 3
 --- !u!65 &1727937392
 BoxCollider:

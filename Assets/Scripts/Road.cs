@@ -29,25 +29,15 @@ public class Road : MonoBehaviour {
 
     public string theme;
 
-    public GameObject RegularTilePrefab { get; private set; }
-    public GameObject CornerRightTilePrefab { get; private set; }
-    public GameObject CornerLeftTilePrefab { get; private set; }
-    public GameObject SplitSidesTilePrefab { get; private set; }
-    public GameObject SplitRightTilePrefab { get; private set; }
-    public GameObject SplitLeftTilePrefab { get; private set; }
-    public GameObject SplitTriTilePrefab { get; private set; }
+    private GameObject RegularTilePrefab;
+    private GameObject CornerRightTilePrefab;
+    private GameObject CornerLeftTilePrefab;
+    private GameObject SplitSidesTilePrefab;
+    private GameObject SplitRightTilePrefab;
+    private GameObject SplitLeftTilePrefab;
+    private GameObject SplitTriTilePrefab;
 
-
-    private const int numObstaclesJumpOverTypes = 4;
-    private List<GameObject> ObstaclesJumpOverPrefabs = new List<GameObject>();
-    private const int numObstaclesFallIntoTypes = 1;
-    private List<GameObject> ObstaclesFallIntoPrefabs = new List<GameObject>();
-    private const int numObstaclesRollUnderTypes = 1;
-    private List<GameObject> ObstaclesRollUnderPrefabs = new List<GameObject>();
-
-
-    // TODO - find the right storage max count value to minimize memory overhead
-    // TODO - there's shouldn't be the same amount of each tile type in storage
+    // the storage max count value should be chosen to minimize memory overhead
     private const int tileStorageMaxCount = 30;
     private List<GameObject> regularTilesStorage = new List<GameObject>();
     private List<GameObject> cornerRightTilesStorage = new List<GameObject>();
@@ -57,6 +47,19 @@ public class Road : MonoBehaviour {
     private List<GameObject> splitLeftTilesStorage = new List<GameObject>();
     private List<GameObject> splitTriTilesStorage = new List<GameObject>();
 
+    private const int maxTilesAhead = 4;
+    private const int maxTilesBehind = 2;
+    private int tilesBehind = 0;
+    private List<GameObject> road = new List<GameObject>();
+
+
+    private const int numObstaclesJumpOverTypes = 4;
+    private List<GameObject> ObstaclesJumpOverPrefabs = new List<GameObject>();
+    private const int numObstaclesFallIntoTypes = 1;
+    private List<GameObject> ObstaclesFallIntoPrefabs = new List<GameObject>();
+    private const int numObstaclesRollUnderTypes = 1;
+    private List<GameObject> ObstaclesRollUnderPrefabs = new List<GameObject>();
+
     private const int obstacleStorageCountPerType = 5;
     private const int obstacleJumpOverStorageMaxCount = numObstaclesJumpOverTypes * obstacleStorageCountPerType;
     private List<GameObject> obstaclesJumpOverStorage = new List<GameObject>();
@@ -65,10 +68,16 @@ public class Road : MonoBehaviour {
     private const int obstacleRollUnderStorageMaxCount = numObstaclesRollUnderTypes * obstacleStorageCountPerType;
     private List<GameObject> obstaclesRollUnderStorage = new List<GameObject>();
 
-    private const int maxTilesAhead = 4;
-    private const int maxTilesBehind = 2;
-    private int tilesBehind = 0;
-    private List<GameObject> road = new List<GameObject>();
+
+    private GameObject gemPrefab;
+    private const int gemStorageMaxCount = 100;
+    private List<GameObject> gemStorage = new List<GameObject>();
+    public bool spawningGems = false;
+    public int numTilesWithGemsRemaining = 0;
+    public int gemSpawnPercentage = 10;
+    public int minConsecutiveTilesWithGems = 5;
+    public int maxConsecutiveTilesWithGems = 10;
+
 
     public void IncrementTilesBehind()
     {
@@ -167,6 +176,7 @@ public class Road : MonoBehaviour {
             int index = Random.Range(0, obstaclesRollUnderStorage.Count);
             GameObject obstacle = obstaclesRollUnderStorage[index];
             obstaclesRollUnderStorage.RemoveAt(index);
+            // TODO - position offset on the direction of movement
             obstacle.transform.position = new Vector3(tile.transform.position.x, obstacle.transform.position.y, tile.transform.position.z);
             obstacle.transform.rotation = tile.transform.rotation;
             obstacle.SetActive(true);
@@ -176,9 +186,24 @@ public class Road : MonoBehaviour {
         }
     }
 
+    public void SpawnGems(GameObject tile)
+    {
+        Tile tileComponent = tile.GetComponent<Tile>();
+        for (int i = 0; i < tileComponent.numGemPositions; ++i)
+        {
+            GameObject gem = gemStorage.Last();
+            gemStorage.RemoveAt(gemStorage.Count - 1);
+            //gem.transform.position = tile.transform.position + tileComponent.gemPositions[i];
+            gem.transform.position = tile.transform.Find("GemPosition" + i).transform.position;
+            gem.SetActive(true);
+            tileComponent.gems.Add(gem);
+        }
+    }
+
     public void RecycleTile(GameObject tile)
     {
         Tile tileComponent = tile.GetComponent<Tile>();
+        // recycle obstacle
         if (tileComponent.obstacle != null)
         {
             tileComponent.obstacle.SetActive(false);
@@ -197,6 +222,13 @@ public class Road : MonoBehaviour {
             tileComponent.obstacle = null;
             tileComponent.obstacleType = ObstacleType.None;
         }
+        // recycle gems
+        for (int i = 0; i < tileComponent.gems.Count; ++i)
+        {
+            tileComponent.gems[i].SetActive(false);
+            gemStorage.Add(tileComponent.gems[i]);
+        }
+        tileComponent.gems.Clear();
         tile.SetActive(false);
         if (tile.tag == "TileCornerRight")
         {
@@ -345,10 +377,35 @@ public class Road : MonoBehaviour {
                 spawnedTile.name = "Tile" + (int.Parse(lastTile.name.Substring(4)) + 1).ToString();
             }
             spawnedTile.SetActive(true);
-            // there can't be consecutive tiles with obstacles
+            // randomize obstacle (there can't be consecutive tiles with obstacles)
             if (lastTile.GetComponent<Tile>().obstacle == null)
             {
                 RandomizeObstacle(spawnedTile);
+            }
+            // spawn gems
+            Tile tileComponent = spawnedTile.GetComponent<Tile>();
+            if (spawningGems && (tileComponent.obstacle == null || tileComponent.obstacleType != ObstacleType.RollUnder))
+            {
+                SpawnGems(spawnedTile);
+                numTilesWithGemsRemaining--;
+                if (numTilesWithGemsRemaining == 0)
+                {
+                    spawningGems = false;
+                }
+            }
+            else
+            {
+                if (Random.Range(0, 100) < gemSpawnPercentage)
+                {
+                    spawningGems = true;
+                    numTilesWithGemsRemaining = Random.Range(minConsecutiveTilesWithGems, maxConsecutiveTilesWithGems);
+                }
+            }
+            if (spawnedTile.tag.Contains("TileSplit"))
+            {
+                SplitTile splitTileComponent = spawnedTile.GetComponent<SplitTile>();
+                splitTileComponent.spawningGems = spawningGems;
+                splitTileComponent.numTilesWithGemsRemaining = numTilesWithGemsRemaining;
             }
             road.Add(spawnedTile);
         }
@@ -386,6 +443,9 @@ public class Road : MonoBehaviour {
         {
             ObstaclesRollUnderPrefabs.Add(Resources.Load<GameObject>(obstaclesPath + "RollUnder" + (i + 1)));
         }
+        // load gem prefab
+        string collectiblesPath = prefabsPath + "Collectibles/";
+        gemPrefab = Resources.Load<GameObject>(collectiblesPath + "Gem");
 
         // instantiate tiles
         for (int i = 0; i < tileStorageMaxCount; ++i)
@@ -447,6 +507,13 @@ public class Road : MonoBehaviour {
                 obstacle.SetActive(false);
                 obstaclesRollUnderStorage.Add(obstacle);
             }
+        }
+        // instantiate gems
+        for (int i = 0; i < gemStorageMaxCount; ++i)
+        {
+            GameObject gem = Instantiate(gemPrefab, gemPrefab.transform.position, Quaternion.identity);
+            gem.SetActive(false);
+            gemStorage.Add(gem);
         }
 
         // initialize road

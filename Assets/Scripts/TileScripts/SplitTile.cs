@@ -8,6 +8,9 @@ public abstract class SplitTile : Tile {
     // TODO - delay time as a function of player's speed
     protected const float mergeUnusedBranchDelay = 0.5f;
 
+    public bool spawningGems = false;
+    public int numTilesWithGemsRemaining = 0;
+
     // used to spawn a tile on each branch
     public abstract void Spawn();
 

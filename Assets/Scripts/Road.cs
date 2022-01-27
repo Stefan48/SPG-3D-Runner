@@ -61,11 +61,8 @@ public class Road : MonoBehaviour {
     private List<GameObject> ObstaclesRollUnderPrefabs = new List<GameObject>();
 
     private const int obstacleStorageCountPerType = 5;
-    private const int obstacleJumpOverStorageMaxCount = numObstaclesJumpOverTypes * obstacleStorageCountPerType;
     private List<GameObject> obstaclesJumpOverStorage = new List<GameObject>();
-    private const int obstacleFallIntoStorageMaxCount = numObstaclesFallIntoTypes * obstacleStorageCountPerType;
     private List<GameObject> obstaclesFallIntoStorage = new List<GameObject>();
-    private const int obstacleRollUnderStorageMaxCount = numObstaclesRollUnderTypes * obstacleStorageCountPerType;
     private List<GameObject> obstaclesRollUnderStorage = new List<GameObject>();
 
 
@@ -77,6 +74,13 @@ public class Road : MonoBehaviour {
     public int gemSpawnPercentage = 10;
     public int minConsecutiveTilesWithGems = 5;
     public int maxConsecutiveTilesWithGems = 10;
+
+
+    private const int numDecorationTypes = 8;
+    private List<GameObject> DecorationPrefabs = new List<GameObject>();
+    private const int decorationStorageCountPerType = 10;
+    private List<GameObject> decorationStorage = new List<GameObject>();
+    private int decorationSpawnPercentage = 30;
 
 
     public void IncrementTilesBehind()
@@ -176,8 +180,9 @@ public class Road : MonoBehaviour {
             int index = Random.Range(0, obstaclesRollUnderStorage.Count);
             GameObject obstacle = obstaclesRollUnderStorage[index];
             obstaclesRollUnderStorage.RemoveAt(index);
-            // TODO - position offset on the direction of movement
-            obstacle.transform.position = new Vector3(tile.transform.position.x, obstacle.transform.position.y, tile.transform.position.z);
+            // vary the position on the direction of movement
+            float positionOffset = (Random.Range(0, 100) - 50.0f) / 40.0f;
+            obstacle.transform.position = new Vector3(tile.transform.position.x, obstacle.transform.position.y, tile.transform.position.z) + tile.transform.forward * positionOffset;
             obstacle.transform.rotation = tile.transform.rotation;
             obstacle.SetActive(true);
             Tile tileComponent = tile.GetComponent<Tile>();
@@ -197,6 +202,40 @@ public class Road : MonoBehaviour {
             gem.transform.position = tile.transform.Find("GemPosition" + i).transform.position;
             gem.SetActive(true);
             tileComponent.gems.Add(gem);
+        }
+    }
+
+    public void SpawnDecorations(GameObject tile)
+    {
+        Tile tileComponent = tile.GetComponent<Tile>();
+        List<int> decorationPositionsRemaining = new List<int>();
+        for (int i = 0; i < tileComponent.numDecorationPositions; ++i)
+        {
+            decorationPositionsRemaining.Add(i);
+        }
+        int spawnPercentage = decorationSpawnPercentage;
+        while (decorationPositionsRemaining.Count > 0)
+        {
+            if (Random.Range(0, 100) < spawnPercentage)
+            {
+                int index = Random.Range(0, decorationStorage.Count);
+                GameObject decoration = decorationStorage[index];
+                decorationStorage.RemoveAt(index);
+                index = Random.Range(0, decorationPositionsRemaining.Count);
+                decoration.transform.position = tile.transform.Find("DecorationPosition" + decorationPositionsRemaining[index]).transform.position;
+                decorationPositionsRemaining.RemoveAt(index);
+                // randomize the rotation
+                int rotation= Random.Range(0, 360);
+                decoration.transform.eulerAngles = new Vector3(0, rotation, 0);
+                decoration.SetActive(true);
+                tileComponent.decorations.Add(decoration);
+                // reduce the probability to spawn additional decorations for the same tile
+                spawnPercentage /= 2;
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
@@ -229,6 +268,14 @@ public class Road : MonoBehaviour {
             gemStorage.Add(tileComponent.gems[i]);
         }
         tileComponent.gems.Clear();
+        // recycle decorations
+        for (int i = 0; i < tileComponent.decorations.Count; ++i)
+        {
+            tileComponent.decorations[i].SetActive(false);
+            decorationStorage.Add(tileComponent.decorations[i]);
+        }
+        tileComponent.decorations.Clear();
+        // recycle tile
         tile.SetActive(false);
         if (tile.tag == "TileCornerRight")
         {
@@ -407,6 +454,8 @@ public class Road : MonoBehaviour {
                 splitTileComponent.spawningGems = spawningGems;
                 splitTileComponent.numTilesWithGemsRemaining = numTilesWithGemsRemaining;
             }
+            // spawn decorations
+            SpawnDecorations(spawnedTile);
             road.Add(spawnedTile);
         }
     }
@@ -446,40 +495,45 @@ public class Road : MonoBehaviour {
         // load gem prefab
         string collectiblesPath = prefabsPath + "Collectibles/";
         gemPrefab = Resources.Load<GameObject>(collectiblesPath + "Gem");
+        // load decoration prefabs
+        string environmentPath = prefabsPath + "Environment/";
+        for (int i = 0; i < numDecorationTypes; ++i)
+        {
+            DecorationPrefabs.Add(Resources.Load<GameObject>(environmentPath + "Decoration" + (i + 1)));
+        }
 
         // instantiate tiles
         for (int i = 0; i < tileStorageMaxCount; ++i)
         {
             // regular tile
-            GameObject newTile = Instantiate(RegularTilePrefab, new Vector3(), Quaternion.identity);
+            GameObject newTile = Instantiate(RegularTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             regularTilesStorage.Add(newTile);
             // corner right tile
-            newTile = Instantiate(CornerRightTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(CornerRightTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             cornerRightTilesStorage.Add(newTile);
             // corner left tile
-            newTile = Instantiate(CornerLeftTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(CornerLeftTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             cornerLeftTilesStorage.Add(newTile);
             // split sides tile
-            newTile = Instantiate(SplitSidesTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(SplitSidesTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             splitSidesTilesStorage.Add(newTile);
             // split right tile
-            newTile = Instantiate(SplitRightTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(SplitRightTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             splitRightTilesStorage.Add(newTile);
             // split left tile
-            newTile = Instantiate(SplitLeftTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(SplitLeftTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             splitLeftTilesStorage.Add(newTile);
             // split tri tile
-            newTile = Instantiate(SplitTriTilePrefab, new Vector3(), Quaternion.identity);
+            newTile = Instantiate(SplitTriTilePrefab, Vector3.zero, Quaternion.identity);
             newTile.SetActive(false);
             splitTriTilesStorage.Add(newTile);
         }
-
         // instantiate obstacles
         for (int i = 0; i < numObstaclesJumpOverTypes; ++i)
         {
@@ -511,9 +565,19 @@ public class Road : MonoBehaviour {
         // instantiate gems
         for (int i = 0; i < gemStorageMaxCount; ++i)
         {
-            GameObject gem = Instantiate(gemPrefab, gemPrefab.transform.position, Quaternion.identity);
+            GameObject gem = Instantiate(gemPrefab, Vector3.zero, Quaternion.identity);
             gem.SetActive(false);
             gemStorage.Add(gem);
+        }
+        // instantiate decorations
+        for (int i = 0; i < numDecorationTypes; ++i)
+        {
+            for (int j = 0; j < decorationStorageCountPerType; ++j)
+            {
+                GameObject decoration = Instantiate(DecorationPrefabs[i], Vector3.zero, Quaternion.identity);
+                decoration.SetActive(false);
+                decorationStorage.Add(decoration);
+            }
         }
 
         // initialize road

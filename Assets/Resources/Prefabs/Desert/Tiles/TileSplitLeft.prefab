@@ -125,6 +125,7 @@ Transform:
   - {fileID: 1498090031893489686}
   - {fileID: 8146506240811677951}
   - {fileID: 3408889326458429604}
+  - {fileID: 4576095109695513047}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -142,12 +143,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   obstacle: {fileID: 0}
   obstacleType: 0
-  gemPositions:
-  - {x: 0, y: 2.25, z: -1}
-  - {x: -1, y: 2.25, z: 0}
-  - {x: 0, y: 2.25, z: 1}
   numGemPositions: 3
   gems: []
+  numDecorationPositions: 1
+  decorations: []
   spawningGems: 0
   numTilesWithGemsRemaining: 0
   frontRoad: []
@@ -181,6 +180,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 283988374556861735}
   m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8530317480792397492
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4576095109695513047}
+  m_Layer: 0
+  m_Name: DecorationPosition0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4576095109695513047
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8530317480792397492}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 283988374556861735}
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8616083356104371866
 GameObject:

@@ -23,6 +23,8 @@ public class SplitSidesTile : SplitTile {
             {
                 Road.Instance.RandomizeObstacle(spawnedTileLeft);
             }
+            // spawn decorations
+            Road.Instance.SpawnDecorations(spawnedTileLeft);
             leftRoad.Add(spawnedTileLeft);
 
             GameObject spawnedTileRight = Road.Instance.GetRegularTile();
@@ -36,6 +38,8 @@ public class SplitSidesTile : SplitTile {
             {
                 Road.Instance.RandomizeObstacle(spawnedTileRight);
             }
+            // spawn decorations
+            Road.Instance.SpawnDecorations(spawnedTileRight);
             rightRoad.Add(spawnedTileRight);
             // spawn gems
             if (spawningGems)
@@ -90,6 +94,8 @@ public class SplitSidesTile : SplitTile {
                     {
                         Road.Instance.RandomizeObstacle(spawnedTile);
                     }
+                    // spawn decorations
+                    Road.Instance.SpawnDecorations(spawnedTile);
                     // spawn gems
                     Tile tileComponent = spawnedTile.GetComponent<Tile>();
                     if (spawningGems && (tileComponent.obstacle == null || tileComponent.obstacleType != ObstacleType.RollUnder))

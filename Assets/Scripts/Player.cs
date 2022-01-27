@@ -22,11 +22,15 @@ public class Player : MonoBehaviour
     private BoxCollider bc;
     private Vector3 bcInitialSize = new Vector3(0.4f, 1.8f, 0.4f);
     private Vector3 bcInitialCenter = new Vector3(0.0f, 0.9f, 0.0f);
-    public float numGemsCollected = 0;
     // TODO - player's speed should affect the animation speed
-    public float speed;
+    // TODO - increase speed with time
+    private float speed;
     private const float leftRightVelocity = 2.0f;
     private const float uplift = 0.1f;
+
+    public float score = 0;
+    private float scoreIncreaseAmount;
+    public float numGemsCollected = 0;
 
     private bool isRunning = true;
     private bool onGround = true;
@@ -172,6 +176,8 @@ public class Player : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        speed = 3.0f;
+        scoreIncreaseAmount = speed / 3.0f;
         rb = GetComponent<Rigidbody>();
         bc = GetComponent<BoxCollider>();
         frontSideTransform = gameObject.transform.Find("FrontSide").transform;
@@ -187,6 +193,12 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        score += scoreIncreaseAmount * Time.deltaTime;
+        if (score % 50 == 0)
+        {
+            speed += speed / 10.0f;
+            scoreIncreaseAmount = speed / 3.0f;
+        }
         if (isRolling)
         {
             rollTime += Time.deltaTime;

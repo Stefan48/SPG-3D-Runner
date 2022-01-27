@@ -407,6 +407,9 @@ MonoBehaviour:
   theme: Desert
   spawningGems: 0
   numTilesWithGemsRemaining: 0
+  gemSpawnPercentage: 10
+  minConsecutiveTilesWithGems: 5
+  maxConsecutiveTilesWithGems: 10
 --- !u!4 &1525810043
 Transform:
   m_ObjectHideFlags: 0
@@ -573,8 +576,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8e302c376c65b0479c14767406c1c4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  score: 0
   numGemsCollected: 0
-  speed: 3
 --- !u!65 &1727937392
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -744,7 +747,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 20, y: 0, z: 0}
 --- !u!114 &1871919393
 MonoBehaviour:
@@ -823,7 +826,7 @@ PrefabInstance:
     - target: {fileID: 3886210275039615744, guid: 33814be07b3638c448bf426f5daea2c9,
         type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3886210275039615744, guid: 33814be07b3638c448bf426f5daea2c9,
         type: 3}

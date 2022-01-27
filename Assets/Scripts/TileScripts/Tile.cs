@@ -10,6 +10,9 @@ public class Tile : MonoBehaviour
     public int numGemPositions;
     public List<GameObject> gems = new List<GameObject>();
 
+    public int numDecorationPositions;
+    public List<GameObject> decorations = new List<GameObject>();
+
     // Start is called before the first frame update
     void Start()
     {

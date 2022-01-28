@@ -65,6 +65,12 @@ public class Player : MonoBehaviour
     private Animator anim;
 
     private GameObject land;
+
+    private void EnableEndGameUI()
+    {
+        restartButton.SetActive(true);
+        exitButton.SetActive(true);
+    }
     
 
     private bool SideWallFound(Vector3 direction, float distance)
@@ -116,6 +122,8 @@ public class Player : MonoBehaviour
             CurrentTile.transform.Find("Ground").GetComponent<Collider>().enabled = false;
             anim.SetTrigger("Fall Trigger");
             // TODO - game end
+            EnableEndGameUI();
+
         }
         else if (other.tag == "Gem")
         {
@@ -162,8 +170,7 @@ public class Player : MonoBehaviour
             bc.center = bcInitialCenter;
             anim.SetTrigger("Fall Back Trigger");
             // TODO - game end
-            restartButton.SetActive(true);
-            exitButton.SetActive(true);
+            EnableEndGameUI();
         }
         else if (collision.gameObject.tag == "Obstacle")
         {
@@ -174,6 +181,7 @@ public class Player : MonoBehaviour
             bc.center = bcInitialCenter;
             anim.SetTrigger("Fall Back Trigger");
             // TODO - game end
+            EnableEndGameUI();
         }
         else
         {
@@ -200,7 +208,7 @@ public class Player : MonoBehaviour
         land = GameObject.Find("Land");
         _Score = GameObject.Find("Canvas").GetComponent<Score>();
         Menu = GameObject.Find("OptionsMenu");
-
+        
 
     }
 

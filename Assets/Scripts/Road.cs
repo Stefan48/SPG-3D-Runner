@@ -586,8 +586,6 @@ public class Road : MonoBehaviour {
         {
             SpawnTile();
         }
-        // TODO - fog
-
     }
 	
 	// Update is called once per frame

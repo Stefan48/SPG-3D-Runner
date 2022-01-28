@@ -22,10 +22,13 @@ public class Player : MonoBehaviour
 
     public GameObject restartButton;
     public GameObject exitButton;
+
     public AudioSource jumpSound;
     public AudioSource hitSound;
     public AudioSource fallSound;
     public AudioSource woohooSound;
+    public AudioSource clinkSound;
+
     private Rigidbody rb;
     private BoxCollider bc;
     private Vector3 bcInitialSize = new Vector3(0.4f, 1.8f, 0.4f);
@@ -135,6 +138,7 @@ public class Player : MonoBehaviour
             other.gameObject.SetActive(false);
             numGemsCollected++;
             _Score.UpdateCollected((int)numGemsCollected);
+            clinkSound.Play();
         }
     }
 

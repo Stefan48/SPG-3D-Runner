@@ -22,7 +22,10 @@ public class Player : MonoBehaviour
 
     public GameObject restartButton;
     public GameObject exitButton;
-
+    public AudioSource jumpSound;
+    public AudioSource hitSound;
+    public AudioSource fallSound;
+    public AudioSource woohooSound;
     private Rigidbody rb;
     private BoxCollider bc;
     private Vector3 bcInitialSize = new Vector3(0.4f, 1.8f, 0.4f);
@@ -34,6 +37,7 @@ public class Player : MonoBehaviour
     private const float uplift = 0.1f;
 
     public float score = 0;
+    private int nextTarget = 50;
     private float scoreIncreaseAmount;
     public float numGemsCollected = 0;
 
@@ -123,6 +127,7 @@ public class Player : MonoBehaviour
             anim.SetTrigger("Fall Trigger");
             // TODO - game end
             EnableEndGameUI();
+            fallSound.Play();
 
         }
         else if (other.tag == "Gem")
@@ -171,6 +176,7 @@ public class Player : MonoBehaviour
             anim.SetTrigger("Fall Back Trigger");
             // TODO - game end
             EnableEndGameUI();
+            hitSound.Play();
         }
         else if (collision.gameObject.tag == "Obstacle")
         {
@@ -182,6 +188,7 @@ public class Player : MonoBehaviour
             anim.SetTrigger("Fall Back Trigger");
             // TODO - game end
             EnableEndGameUI();
+            hitSound.Play();
         }
         else
         {
@@ -223,10 +230,12 @@ public class Player : MonoBehaviour
             _Score.UpdateScore((int)score);
         }
         
-        if (score % 50 == 0)
+        if ((int)score != 0 && (int)score % nextTarget == 0)
         {
             speed += speed / 10.0f;
             scoreIncreaseAmount = speed / 3.0f;
+            nextTarget += 50;
+            woohooSound.Play();
         }
         if (isRolling)
         {
@@ -279,11 +288,13 @@ public class Player : MonoBehaviour
         // when jumping, the player shouldn't exit/re-enter the trigger of the current tile => larger colliders
         if (onGround && Input.GetKeyDown(KeyCode.W))
         {
+            jumpSound.Play();
             onGround = false;
             bc.size = new Vector3(bc.size.x, bc.size.y / 2.0f, bc.size.z);
             bc.center = new Vector3(bc.center.x, bc.center.y * 1.5f, bc.center.z);
             //bc.center = new Vector3(bc.center.x, bc.center.y * 2.0f, bc.center.z);
             anim.SetTrigger("Jump Trigger");
+            
         }
         else if (onGround && !isRolling && Input.GetKeyDown(KeyCode.S))
         {

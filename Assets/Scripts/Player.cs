@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour
@@ -128,7 +126,7 @@ public class Player : MonoBehaviour
         {
             // game end
             isRunning = false;
-            rb.velocity = new Vector3(0, 0, 0);
+            rb.velocity = Vector3.zero;
             bc.size = bcInitialSize;
             bc.center = bcInitialCenter;
             // disable current tile's ground's non-trigger collider (which must be the first collider of the ground object)
@@ -180,7 +178,7 @@ public class Player : MonoBehaviour
         {
             // game end
             isRunning = false;
-            rb.velocity = new Vector3(0, 0, 0);
+            rb.velocity = Vector3.zero;
             bc.size = bcInitialSize;
             bc.center = bcInitialCenter;
             anim.SetTrigger("Fall Back Trigger");
@@ -192,7 +190,7 @@ public class Player : MonoBehaviour
             // if (transform.position.y <= 0.55f) => player stepped on obstacle
             // game end
             isRunning = false;
-            rb.velocity = new Vector3(0, 0, 0);
+            rb.velocity = Vector3.zero;
             bc.size = bcInitialSize;
             bc.center = bcInitialCenter;
             anim.SetTrigger("Fall Back Trigger");
@@ -205,7 +203,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    // Use this for initialization
     void Start()
     {
         speed = 6.0f;
@@ -222,7 +219,6 @@ public class Player : MonoBehaviour
         land = GameObject.Find("Land");
     }
 
-    // Update is called once per frame
     void Update()
     {        
         if(!isRunning)

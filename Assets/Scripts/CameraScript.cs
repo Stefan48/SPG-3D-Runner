@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class CameraScript : MonoBehaviour {
+public class CameraScript : MonoBehaviour
+{
 
     private GameObject cameraParams;
     private Transform cameraPlaceTransform;
@@ -10,18 +9,11 @@ public class CameraScript : MonoBehaviour {
     private Vector3 velocity = Vector3.zero;
     private const float followDelay = 0.125f;
 
-    // Use this for initialization
     void Start ()
     {
         cameraParams = GameObject.Find("CameraParams");
         cameraPlaceTransform = cameraParams.transform.Find("CameraPlace").transform;
         cameraTargetTransform = cameraParams.transform.Find("CameraTarget").transform;
-    }
-	
-	// Update is called once per frame
-	void Update ()
-    {
-        
     }
 
     private void LateUpdate()

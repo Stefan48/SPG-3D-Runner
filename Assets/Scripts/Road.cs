@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -11,8 +10,8 @@ public enum ObstacleType
     RollUnder
 }
 
-public class Road : MonoBehaviour {
-
+public class Road : MonoBehaviour
+{
     // Singleton Pattern
     private static Road instance;
     public static Road Instance
@@ -465,7 +464,6 @@ public class Road : MonoBehaviour {
         road.AddRange(tiles);
     }
 
-	// Use this for initialization
 	void Start ()
     {
         string prefabsPath = "Prefabs/" + theme + "/";
@@ -587,10 +585,4 @@ public class Road : MonoBehaviour {
             SpawnTile();
         }
     }
-	
-	// Update is called once per frame
-	void Update ()
-    {
-		
-	}
 }

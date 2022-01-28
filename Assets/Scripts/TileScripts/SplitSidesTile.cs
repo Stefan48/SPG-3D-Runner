@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class SplitSidesTile : SplitTile {
+public class SplitSidesTile : SplitTile
+{
 
     public List<GameObject> leftRoad = new List<GameObject>();
     public List<GameObject> rightRoad = new List<GameObject>();
@@ -139,7 +140,6 @@ public class SplitSidesTile : SplitTile {
 
     public override IEnumerator MergeIntoRoad(Vector3 chosenDirection)
     {
-        // TODO - wait time as a function of player's speed
         yield return new WaitForSeconds(mergeUnusedBranchDelay);
         if (chosenDirection == Vector3.left)
         {

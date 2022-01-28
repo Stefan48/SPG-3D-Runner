@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class SplitTriTile : SplitTile {
+public class SplitTriTile : SplitTile
+{
 
     public List<GameObject> frontRoad = new List<GameObject>();
     public List<GameObject> leftRoad = new List<GameObject>();
